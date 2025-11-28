@@ -115,7 +115,7 @@ async function processWithGemini(text) {
     const toLang = outputLang.options[outputLang.selectedIndex].text.split(" ")[1] || "";
 
     try {
-        const response = await fetch("../api/translate", {
+        const response = await fetch("../api/translate.js", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -263,4 +263,5 @@ outputLang.onchange = async () => {
 updateStatus("ready", "Ready to record");
 
 })
+
 
