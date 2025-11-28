@@ -1,7 +1,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-
+console.log(process.env.GEMINI_API_KEY)
 const recordBtn = document.getElementById("record-btn");
 
 const pulseRing = document.getElementById("pulse-ring");
@@ -263,6 +263,7 @@ outputLang.onchange = async () => {
 updateStatus("ready", "Ready to record");
 
 })
+
 
 
 
