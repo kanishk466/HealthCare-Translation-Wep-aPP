@@ -29,12 +29,7 @@ let isRecording = false;
 let lastProcessedText = "";
 let audioInterval;
 
-/************************************************************
- *                GEMINI CONFIG
- ************************************************************/
-const GEMINI_API_KEY = 'AIzaSyBuZoPBlxDZrtThitzVexVgyAACL5MVaVA'; 
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
 
 /************************************************************
  *                STATUS UI UPDATE
@@ -119,38 +114,35 @@ async function processWithGemini(text) {
     const fromLang = inputLang.options[inputLang.selectedIndex].text.split(" ")[1] || "";
     const toLang = outputLang.options[outputLang.selectedIndex].text.split(" ")[1] || "";
 
-    const prompt = `
-You are a medical translator.
-
-Task 1: Fix speech-to-text and medical terminology errors.
-Task 2: Translate to ${toLang}.
-
-Respond exactly in format:
-
-CORRECTED: ...
-TRANSLATED: ...
-    
-Text: "${text}"
-`;
-
     try {
-        const response = await fetch(GEMINI_URL, {
+        const response = await fetch("/api/translate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.3 }
+                text: text,
+                fromLang: fromLang,
+                toLang: toLang
             })
         });
 
+        if (!response.ok) {
+            throw new Error("Server error: " + response.status);
+        }
+
         const json = await response.json();
-        const output = json.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        const output = json.output || "";
 
         return {
-            corrected: output.match(/CORRECTED:\s*(.*?)(?=TRANSLATED:)/s)?.[1]?.trim() || text,
-            translated: output.match(/TRANSLATED:\s*(.*)/s)?.[1]?.trim() || "Translation failed"
+            corrected:
+                output.match(/CORRECTED:\s*([\s\S]*?)(?=TRANSLATED:)/)?.[1]?.trim() ||
+                text,
+            translated:
+                output.match(/TRANSLATED:\s*([\s\S]*)/)?.[1]?.trim() ||
+                "Translation failed"
         };
+
     } catch (err) {
+        console.error("Translation error:", err);
         return {
             corrected: text,
             translated: "Error. Try again."
@@ -269,4 +261,5 @@ outputLang.onchange = async () => {
  *                INIT STATUS
  ************************************************************/
 updateStatus("ready", "Ready to record");
+
 })
